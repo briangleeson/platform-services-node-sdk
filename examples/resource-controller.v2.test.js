@@ -75,14 +75,14 @@ describe('ResourceControllerV2', () => {
   let accountId = config.accountId;
   let aliasTargetCRN = config.aliasTargetCrn;
   let bindingTargetCRN = config.bindingTargetCrn;
-  let resourceInstanceName = 'RcSdkInstance1Node';
-  let resourceInstanceUpdateName = 'RcSdkInstanceUpdate1Node';
-  let aliasName = 'RcSdkAlias1Node';
-  let aliasUpdateName = 'RcSdkAliasUpdate1Node';
-  let bindingName = 'RcSdkBinding1Node';
-  let bindingUpdateName = 'RcSdkBindingUpdate1Node';
-  let keyName = 'RcSdkKey1Node';
-  let keyUpdateName = 'RcSdkKeyUpdate1Node';
+  let resourceInstanceName = 'RcSdkInstance3Node';
+  let resourceInstanceUpdateName = 'RcSdkInstanceUpdate3Node';
+  let aliasName = 'RcSdkAlias3Node';
+  let aliasUpdateName = 'RcSdkAliasUpdate3Node';
+  let bindingName = 'RcSdkBinding3Node';
+  let bindingUpdateName = 'RcSdkBindingUpdate3Node';
+  let keyName = 'RcSdkKey3Node';
+  let keyUpdateName = 'RcSdkKeyUpdate3Node';
   let targetRegion = 'global';
 
   test('createResourceInstance request example', async () => {
@@ -399,6 +399,9 @@ describe('ResourceControllerV2', () => {
 
     try {
       const res = await resourceControllerService.getResourceBinding(params);
+      if (res.credentials && res.credentials.REDACTED) {
+        console.log("Credentials are redacted with code:", res.credentials.REDACTED, ".The User doesn't have the correct access to view the credentials. Refer to the API documentation for additional details.")
+      }
       console.log(JSON.stringify(res.result, null, 2));
     } catch (err) {
       console.warn(err);
@@ -544,6 +547,9 @@ describe('ResourceControllerV2', () => {
 
     try {
       const res = await resourceControllerService.getResourceKey(params);
+      if (res.credentials && res.credentials.REDACTED) {
+        console.log("Credentials are redacted with code:", res.credentials.REDACTED, ".The User doesn't have the correct access to view the credentials. Refer to the API documentation for additional details.")
+      }
       console.log(JSON.stringify(res.result, null, 2));
     } catch (err) {
       console.warn(err);
@@ -827,29 +833,29 @@ describe('ResourceControllerV2', () => {
   });
   test('runReclamationAction request example', async () => {
 
-    consoleLogMock.mockImplementation(output => {
-      originalLog(output);
-    });
-    consoleWarnMock.mockImplementation(output => {
-      originalWarn(output);
-      // when the test fails we need to print out the error message and stop execution right after it
-      expect(true).toBeFalsy();
-    });
+    // consoleLogMock.mockImplementation(output => {
+    //   originalLog(output);
+    // });
+    // consoleWarnMock.mockImplementation(output => {
+    //   originalWarn(output);
+    //   // when the test fails we need to print out the error message and stop execution right after it
+    //   expect(true).toBeFalsy();
+    // });
 
-    originalLog('runReclamationAction() result:');
-    // begin-run_reclamation_action
+    // originalLog('runReclamationAction() result:');
+    // // begin-run_reclamation_action
 
-    const params = {
-      id: reclamationId,
-      actionName: 'reclaim',
-    };
+    // const params = {
+    //   id: reclamationId,
+    //   actionName: 'reclaim',
+    // };
 
-    try {
-      const res = await resourceControllerService.runReclamationAction(params);
-      console.log(JSON.stringify(res.result, null, 2));
-    } catch (err) {
-      console.warn(err);
-    }
+    // try {
+    //   const res = await resourceControllerService.runReclamationAction(params);
+    //   console.log(JSON.stringify(res.result, null, 2));
+    // } catch (err) {
+    //   console.warn(err);
+    // }
 
     // end-run_reclamation_action
   });
