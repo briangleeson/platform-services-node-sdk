@@ -651,6 +651,51 @@ class ResourceControllerV2 extends BaseService {
     return this.createRequest(parameters);
   }
 
+  /**
+   * Cancel the in progress last operation of the resource instance.
+   *
+   * Cancel the in progress last operation of the resource instance. After successful cancellation, the resource
+   * instance is removed.
+   *
+   * @param {Object} params - The parameters to send to the service.
+   * @param {string} params.id - The resource instance URL-encoded CRN or GUID.
+   * @param {OutgoingHttpHeaders} [params.headers] - Custom request headers
+   * @returns {Promise<ResourceControllerV2.Response<ResourceControllerV2.ResourceInstance>>}
+   */
+   public cancelLastopResourceInstance(
+    params: ResourceControllerV2.CancelLastopResourceInstanceParams
+  ): Promise<ResourceControllerV2.Response<ResourceControllerV2.ResourceInstance>> {
+    const _params = { ...params };
+    const requiredParams = ['id'];
+    const missingParams = getMissingParams(_params, requiredParams);
+    if (missingParams) {
+      return Promise.reject(missingParams);
+    }
+
+    const path = {
+      'id': _params.id,
+    };
+
+    const sdkHeaders = getSdkHeaders(
+      ResourceControllerV2.DEFAULT_SERVICE_NAME,
+      'v2',
+      'cancelLastopResourceInstance'
+    );
+
+    const parameters = {
+      options: {
+        url: '/v2/resource_instances/{id}/last_operation',
+        method: 'DELETE',
+        path,
+      },
+      defaultOptions: extend(true, {}, this.baseOptions, {
+        headers: extend(true, sdkHeaders, {}, _params.headers),
+      }),
+    };
+
+    return this.createRequest(parameters);
+  }
+
   /*************************
    * resourceKeys
    ************************/
@@ -1770,7 +1815,11 @@ namespace ResourceControllerV2 {
     /** The state of the instance. If not specified, instances in state `active` and `provisioning` are returned. */
     export enum State {
       ACTIVE = 'active',
+      INACTIVE = 'inactive',
+      FAILED = 'failed',
+      PENDING_RECLAMATION = 'pending_reclamation',
       PROVISIONING = 'provisioning',
+      PRE_PROVISIONING = 'pre_provisioning',
       REMOVED = 'removed',
     }
   }
@@ -1865,7 +1914,7 @@ namespace ResourceControllerV2 {
     limit?: number;
     /** An optional token that indicates the beginning of the page of results to be returned. Any additional query
      *  parameters are ignored if a page token is present. If omitted, the first page of results is returned. This value
-     *  is obtained from the 'next_url' field of the operation response.
+     *  is obtained from the 'start' query parameter in the 'next_url' field of the operation response.
      */
     start?: string;
     headers?: OutgoingHttpHeaders;
@@ -1881,6 +1930,13 @@ namespace ResourceControllerV2 {
   /** Parameters for the `unlockResourceInstance` operation. */
   export interface UnlockResourceInstanceParams {
     /** The short or long ID of the instance. */
+    id: string;
+    headers?: OutgoingHttpHeaders;
+  }
+
+  /** Parameters for the `cancelLastopResourceInstance` operation. */
+  export interface CancelLastopResourceInstanceParams {
+    /** The resource instance URL-encoded CRN or GUID. */
     id: string;
     headers?: OutgoingHttpHeaders;
   }
@@ -1921,7 +1977,9 @@ namespace ResourceControllerV2 {
      *  target resource brokers, whereas platform defined options are not.
      */
     parameters?: ResourceKeyPostParameters;
-    /** The role name or it's CRN. */
+    /** The base IAM service role name (Reader, Writer, or Manager), or the service or custom role CRN. Refer to
+     *  service’s documentation for supported roles.
+     */
     role?: string;
     headers?: OutgoingHttpHeaders;
   }
@@ -1993,7 +2051,9 @@ namespace ResourceControllerV2 {
      *  target resource brokers, whereas platform defined options are not.
      */
     parameters?: ResourceBindingPostParameters;
-    /** The role name or it's CRN. */
+    /** The base IAM service role name (Reader, Writer, or Manager), or the service or custom role CRN. Refer to
+     *  service’s documentation for supported roles.
+     */
     role?: string;
     headers?: OutgoingHttpHeaders;
   }
@@ -2133,6 +2193,12 @@ namespace ResourceControllerV2 {
 
   /** The credentials for a resource. */
   export interface Credentials {
+    /** If present, the user doesn't have the correct access to view the credentials and the details are redacted.
+     *  The string value identifies the level of access that's required to view the credential. For additional
+     *  information, see [viewing a
+     *  credential](https://cloud.ibm.com/docs/account?topic=account-service_credentials&interface=ui#viewing-credentials-ui).
+     */
+    REDACTED?: string;
     /** The API key for the credentials. */
     apikey?: string;
     /** The optional description of the API key. */
@@ -2312,7 +2378,11 @@ namespace ResourceControllerV2 {
     /** The state of the binding. */
     state?: string;
     /** The credentials for the binding. Additional key-value pairs are passed through from the resource brokers.
-     *  For additional details, see the service’s documentation.
+     *  After a credential is created for a service, it can be viewed at any time for users that need the API key value.
+     *  However, all users must have the correct level of access to see the details of a credential that includes the
+     *  API key value. For additional details, see [viewing a
+     *  credential](https://cloud.ibm.com/docs/account?topic=account-service_credentials&interface=ui#viewing-credentials-ui)
+     *  or the service’s documentation.
      */
     credentials?: Credentials;
     /** Specifies whether the binding’s credentials support IAM. */
@@ -2414,7 +2484,7 @@ namespace ResourceControllerV2 {
     /** The resource-broker-provided URL to access administrative features of the instance. */
     dashboard_url?: string;
     /** The status of the last operation requested on the instance. */
-    last_operation?: JsonObject;
+    last_operation?: ResourceInstanceLastOperation;
     /** The relative path to the resource aliases for the instance. */
     resource_aliases_url?: string;
     /** The relative path to the resource bindings for the instance. */
@@ -2433,6 +2503,32 @@ namespace ResourceControllerV2 {
     controlled_by?: string;
     /** A boolean that dictates if the resource instance is locked or not. */
     locked?: boolean;
+  }
+
+  /** The status of the last operation requested on the instance. */
+  export interface ResourceInstanceLastOperation {
+    /** The last operation type of the resource instance. */
+    type: string;
+    /** The last operation state of the resoure instance. This indicates if the resource's last operation is in
+     *  progress, succeeded or failed.
+     */
+    state: string;
+    /** The last operation sub type of the resoure instance. */
+    sub_type?: string;
+    /** A boolean that indicates if the resource is provisioned asynchronously or not. */
+    async: boolean;
+    /** The description of the status of last operation. */
+    description: string;
+    /** Optional string that states the reason code for the last operation state change. */
+    reason_code?: string;
+    /** A field which indicates the time after which the instance's last operation is to be polled. */
+    poll_after?: number;
+    /** A boolean that indicates if the resource's last operation is cancelable or not. */
+    cancelable: boolean;
+    /** A boolean that indicates if the resource broker's last operation can be polled or not. */
+    poll: boolean;
+    /** ResourceInstanceLastOperation accepts additional properties. */
+    [propName: string]: any;
   }
 
   /** A list of resource instances. */
@@ -2483,8 +2579,12 @@ namespace ResourceControllerV2 {
     resource_group_id?: string;
     /** The unique ID of the offering. This value is provided by and stored in the global catalog. */
     resource_id?: string;
-    /** The credentials for the key. Additional key-value pairs are passed through from the resource brokers.  Refer
-     *  to service’s documentation for additional details.
+    /** The credentials for the key. Additional key-value pairs are passed through from the resource brokers. After
+     *  a credential is created for a service, it can be viewed at any time for users that need the API key value.
+     *  However, all users must have the correct level of access to see the details of a credential that includes the
+     *  API key value. For additional details, see [viewing a
+     *  credential](https://cloud.ibm.com/docs/account?topic=account-service_credentials&interface=ui#viewing-credentials-ui)
+     *  or the service’s documentation.
      */
     credentials?: Credentials;
     /** Specifies whether the key’s credentials support IAM. */

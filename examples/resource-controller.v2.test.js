@@ -75,14 +75,14 @@ describe('ResourceControllerV2', () => {
   let accountId = config.accountId;
   let aliasTargetCRN = config.aliasTargetCrn;
   let bindingTargetCRN = config.bindingTargetCrn;
-  let resourceInstanceName = 'RcSdkInstance3Node';
-  let resourceInstanceUpdateName = 'RcSdkInstanceUpdate3Node';
-  let aliasName = 'RcSdkAlias3Node';
-  let aliasUpdateName = 'RcSdkAliasUpdate3Node';
-  let bindingName = 'RcSdkBinding3Node';
-  let bindingUpdateName = 'RcSdkBindingUpdate3Node';
-  let keyName = 'RcSdkKey3Node';
-  let keyUpdateName = 'RcSdkKeyUpdate3Node';
+  let resourceInstanceName = 'RcSdkInstance1Node';
+  let resourceInstanceUpdateName = 'RcSdkInstanceUpdate1Node';
+  let aliasName = 'RcSdkAlias1Node';
+  let aliasUpdateName = 'RcSdkAliasUpdate1Node';
+  let bindingName = 'RcSdkBinding1Node';
+  let bindingUpdateName = 'RcSdkBindingUpdate1Node';
+  let keyName = 'RcSdkKey1Node';
+  let keyUpdateName = 'RcSdkKeyUpdate1Node';
   let targetRegion = 'global';
 
   test('createResourceInstance request example', async () => {
@@ -858,5 +858,33 @@ describe('ResourceControllerV2', () => {
     // }
 
     // end-run_reclamation_action
+  });
+  test('cancelLastopResourceInstance request example', async () => {
+    consoleLogMock.mockImplementation(output => {
+      originalLog(output);
+    });
+    consoleWarnMock.mockImplementation(output => {
+      originalWarn(output);
+      // when the test fails we need to print out the error message and stop execution right after it
+      expect(true).toBeFalsy();
+    });
+
+    originalLog('cancelLastopResourceInstance() result:');
+
+    // begin-cancel_lastop_resource_instance
+    const params = {
+      id: instanceGuid,
+      recursive: false,
+    };
+    let res;
+    try {
+      await resourceControllerService.cancelLastopResourceInstance(params);
+      // res = await resourceControllerService.cancelLastopResourceInstance(params);
+      // console.log(JSON.stringify(res.result, null, 2));
+    } catch (err) {
+      console.warn(err);
+    }
+
+    // end-cancel_lastop_resource_instance
   });
 });
